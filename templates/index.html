@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>MPU6050 Live Monitor</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h2>MPU6050 Live Acceleration</h2>
+
+  <canvas id="chart" width="800" height="400"></canvas>
+
+  <script>
+    const ctx = document.getElementById("chart").getContext("2d");
+
+    const data = {
+      labels: [],
+      datasets: [
+        { label: "Ax", borderColor: "red", data: [] },
+        { label: "Ay", borderColor: "green", data: [] },
+        { label: "Az", borderColor: "blue", data: [] }
+      ]
+    };
+
+    const chart = new Chart(ctx, {
+      type: "line",
+      data: data,
+      options: {
+        animation: false,
+        scales: {
+          y: { min: -12, max: 12 }
+        }
+      }
+    });
+
+    async function fetchData() {
+      const res = await fetch("/data");
+      const d = await res.json();
+
+      if (data.labels.length > 100) {
+        data.labels.shift();
+        data.datasets.forEach(ds => ds.data.shift());
+      }
+
+      data.labels.push("");
+      data.datasets[0].data.push(d.ax);
+      data.datasets[1].data.push(d.ay);
+      data.datasets[2].data.push(d.az);
+
+      chart.update();
+    }
+
+    setInterval(fetchData, 2000);
+  </script>
+</body>
+</html>
